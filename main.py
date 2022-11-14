@@ -1,12 +1,11 @@
 import sys
-from turtle import color
 import chess
 import chess.syzygy
 import chess.gaviota
 import random
 import math
 
-#color = sys.argv[1]
+color = sys.argv[1]
 
 class AntiBoard(chess.Board):
     @property
@@ -40,4 +39,17 @@ def Endgame():
                 break
             board.pop()
     board.push_san(input())
+
+def EvalBoard(pawn, knight, bishop, rook, queen):
+    dic = {'p' : (-1 * pawn), 'n' : (-1 * knight), 'b' : (-1 * bishop), 'r' : (-1 * rook), 'q' : (-1 * queen),
+    'P' : pawn, 'N' : knight, 'B' : bishop, 'R' : rook, 'Q' : queen}
+    value = 0
+    for i in range(64):
+        piece =  board.piece_at(i)
+        value += dic[piece]
+    return value
+        
+
+
+
 
