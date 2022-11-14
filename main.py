@@ -41,11 +41,11 @@ def Endgame():
     board.push_san(input())
 
 def EvalBoard(pawn, knight, bishop, rook, queen):
-    dic = {'p' : (-1 * pawn), 'n' : (-1 * knight), 'b' : (-1 * bishop), 'r' : (-1 * rook), 'q' : (-1 * queen),
-    'P' : pawn, 'N' : knight, 'B' : bishop, 'R' : rook, 'Q' : queen}
+    dic = {'p' : (-1 * pawn), 'n' : (-1 * knight), 'b' : (-1 * bishop), 'r' : (-1 * rook), 'q' : (-1 * queen), 'k' : 0,
+    'P' : pawn, 'N' : knight, 'B' : bishop, 'R' : rook, 'Q' : queen, 'K' : 0, 'None': 0}
     value = 0
     for i in range(64):
-        piece =  board.piece_at(i)
+        piece =  str(board.piece_at(i))
         value += dic[piece]
     return value
         
