@@ -1,11 +1,12 @@
 import sys
 from turtle import color
 import chess
+import chess.syzygy
 import chess.gaviota
-#import chess.svg
 import random
+import math
 
-#colour = sys.argv[1]
+#color = sys.argv[1]
 
 class AntiBoard(chess.Board):
     @property
@@ -25,29 +26,18 @@ def RandomMove():
     board.push(moves[random.randint(0,len(moves)-1)])
     print(move)
 
-## Call this function on our turn once we have 4 or fewer pieces and the opponent has none
+tablebase = chess.gaviota.open_tablebase("tablebase")
+
 def Endgame():
-    with chess.gaviota.open_tablebase("data/gaviota") as tablebase:
-        while not chess.Board.is_checkmate():
-            turns_left = tablebase.probe_dtm(board)
-            for move in list(board.legal_moves):
-                board.push(move)
-                if tablebase.probe_dtm(board) < turns_left:
-                    break
-                else:
-                    board.pop()
-            board.push_san(input())
-
-#board.legal_moves
-
-if color == "white":
-    RandomMove()
-
-while True:
+    while not board.is_checkmate():
+        moves = list(board.legal_moves)
+        n = abs(tablebase.probe_dtm(board))
+        for move in moves:
+            board.push(move)
+            if (n == 1 and board.is_checkmate()) or \
+            (n != 1 and abs(tablebase.probe_dtm(board)) == n - 1):
+                print(move)
+                break
+            board.pop()
     board.push_san(input())
-    RandomMove()
 
-#while True:
-#    input()
-#    RandomMove()
-#    print(board)
