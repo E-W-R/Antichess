@@ -1,5 +1,5 @@
 import sys
-from turtle import color
+#from turtle import color
 import chess
 import chess.gaviota
 import random
@@ -17,8 +17,6 @@ class MyLegalMoveGenerator(chess.LegalMoveGenerator):
     def __iter__(self):
         return self.board.generate_legal_captures() if any(self.board.generate_legal_captures()) \
             else self.board.generate_legal_moves()
-
-board = AntiBoard()
 
 def RandomMove(board):
     moves = list(board.legal_moves)
@@ -74,4 +72,36 @@ def Human(board):
 
 
 
-Simulate(Human,RandomMove)
+#Simulate(RandomMove,RandomMove)
+
+def ComputerL1(board):
+    dic = {'p' : 0, 'n' : 0, 'b' : 0, 'r' : 0, 'q' : 0, 'k' : 0,
+    'P' : 0, 'N' : 0, 'B' : 0, 'R' : 0, 'Q' : 0, 'K' : 0, 'None': 0}
+    piece = 0
+    for i in range(64):
+        piece =  str(board.piece_at(i))
+        value += dic[piece]
+    return value
+    moves = list(board.legal_moves)
+    move = moves[random.randint(0,len(moves)-1)]
+    #board.push(moves[random.randint(0,len(moves)-1)])
+    return(str(move))
+
+def EvalBoardattack(board):
+    white = 0
+    black = 0
+    for i in range(64):
+        if (board.color_at(i) == True):
+            white += len(board.attacks(i))
+        elif(board.color_at(i) == False):
+            black += len(board.attacks(i))
+    return [white, black]
+
+def Convert(n):
+    alpha = ["a","b","c","d","e","f","g","h"]
+    return alpha[n % 8]+ str(n // 8 + 1)
+
+board = AntiBoard()
+#print(Convert(1))
+#print(board.color_at(40))
+print(EvalBoardattack(board))
