@@ -61,3 +61,39 @@ def Test():
             print(board)
             print()
             color = 1 - color
+
+
+def alphabeta(node, depth, alpha, beta, maximizingPlayer, first):
+    if depth == 0:
+        e1 = EvalBoard(node, 1, 3, 3, 5, 9)
+        e2 = EvalBoardAttack(node)
+        return (e1 + (e2[1] - e2[0]) * (abs(e1) < 8) * 0.05 + random.uniform(0,0.01)) * (1 if color else -1)
+    if IsTablebase(node):
+        dtm = tablebase.probe_dtm(node)
+        return 0 if dtm == 0 else dtm/abs(dtm)*200
+    if maximizingPlayer:
+        value = -200
+        for move in list(node.legal_moves):
+            child = node.copy()
+            child.push(move)
+            v = alphabeta(child, depth - 1 + node.is_capture(move), alpha, beta, False, False)
+            if v > value:
+                value = v
+                best = child
+            if value >= beta: # make pruning constraints looser
+                break
+            alpha = max(alpha, value)
+        return best if first else value
+    else:
+        value = 200
+        for move in list(node.legal_moves):
+            child = node.copy()
+            child.push(move)
+            v = alphabeta(child, depth - 1 + node.is_capture(move), alpha, beta, False, False)
+            if v < value:
+                value = v
+                best = child
+            if value <= alpha:
+                break
+            beta == min(beta, value)
+        return best if first else value
