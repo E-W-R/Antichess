@@ -1,4 +1,6 @@
 import sys
+import time
+import statistics
 #from turtle import color
 import chess
 import chess.gaviota
@@ -38,13 +40,16 @@ def IsTablebase(board):
 
 def Endgame(board):
     copyboard = board.copy()
-    while not copyboard.is_checkmate():
+    while not copyboard.outcome():
         moves = list(copyboard.legal_moves)
         n = abs(tablebase.probe_dtm(copyboard))
         for move in moves:
+            if copyboard.is_capture(move):
+                return str(move)
             copyboard.push(move)
             if (n == 1 and copyboard.is_checkmate()) or \
-            (n != 1 and abs(tablebase.probe_dtm(copyboard)) == n - 1):
+            (n != 1 and abs(tablebase.probe_dtm(copyboard)) == n - 1) or \
+            (n == 0 and tablebase.probe_dtm(copyboard) == 0):
                 return str(move)
             copyboard.pop()
 
@@ -149,7 +154,116 @@ def Convert(n):
     alpha = ["a","b","c","d","e","f","g","h"]
     return alpha[n % 8]+ str(n // 8 + 1)
 
+#print(Convert(5))
+
 board = AntiBoard()
 #print(Convert(1))
 #print(board.color_at(40))
-print(EvalBoardattack(board))
+#print(EvalBoardattack(board))
+
+def Sack(board, colour):
+    dic = {'p' : [], 'n' : [], 'b' : [], 'r' : [], 'q' : [], 'k' : [],
+    'P' : [], 'N' : [], 'B' : [], 'R' : [], 'Q' : [], 'K' : []}
+    piece = 0
+    for i in range(64):
+        piece =  str(board.piece_at(i))
+        if piece != 'None':
+            dic[piece].append(i)
+    if (colour):
+        if (dic['Q'] != []):
+            if (dic['R'] != []):
+                move = SackPiece(board, dic['R'][0], dic['k'][0])
+                return Convert(move[0]) + Convert(move[1])
+            elif (dic['B'] != []):
+                move = SackPiece(board, dic['R'][0], dic['k'][0])
+                return Convert(move[0]) + Convert(move[1])
+            elif (dic['N'] != []):
+                move = SackPiece(board, dic['R'][0], dic['k'][0])
+                return Convert(move[0]) + Convert(move[1])
+        elif (dic['R'] != []):
+            if (dic['B'] != []):
+                move = SackPiece(board, dic['R'][0], dic['k'][0])
+                return Convert(move[0]) + Convert(move[1])
+            elif (dic['N'] != []):
+                move = SackPiece(board, dic['R'][0], dic['k'][0])
+                return Convert(move[0]) + Convert(move[1])
+        elif (len(dic['B']) >= 2):
+            if (dic['B'] != []):
+                move = SackPiece(board, dic['R'][0], dic['k'][0])
+                return Convert(move[0]) + Convert(move[1])
+        elif (len(dic['N']) >= 2):
+            print(1)
+        elif (len(dic['N'] + len(dic['B'])) >= 2):
+            print(1)
+            #sack everything else
+        else:
+            print(5)
+
+    return "A"
+
+def Distance(s1 , s2):
+    dist = abs(s1-s2)
+    return dist % 8 + dist // 8
+
+def SackPiece(board, s1, s2):
+    #dic = {'p' : [], 'n' : [], 'b' : [], 'r' : [], 'q' : [], 'k' : [],
+    #'P' : [], 'N' : [], 'B' : [], 'R' : [], 'Q' : [], 'K' : []}
+    #print(s1, s2)
+    poss = board.attacks(s1)
+    #print(poss)
+    min = 100
+    for move in poss:
+        dist = Distance(move, s2)
+        #print(dist)
+        if (dist < min):
+            min = dist
+    for move in poss:
+        dist = Distance(move, s2)
+        if (dist == min):
+            return (s1, move)
+
+
+def SimulateN(f1, f2, n):
+    ww = 0
+    bw = 0
+    wtimes = []
+    btimes = []
+    for i in range(n):
+        board = AntiBoard()
+        turn = 0
+        players = (f1,f2)
+        wtime = 0
+        btime = 0
+        while not board.outcome():
+            #print(i)
+            #print(board)
+            #print()
+            start = time.time()
+            move = players[turn](board)
+            end = time.time()
+            if (turn == 0):
+                wtime += (end - start)
+            elif (turn == 1):
+                btime += (end - start)
+            board.push_san(move)
+            #print("%s plays %s" % (["White","Black"][turn], move))
+            turn = 1 - turn
+        wtimes.append(wtime)
+        btimes.append(btime)
+        #print(str(board.outcome().result()))
+        if (str(board.outcome().result()) == "1/2-1/2"):
+            ww += 0.5
+            bw += 0.5
+        else: 
+            ww += int(str(board.outcome().result())[0])
+            bw += int(str(board.outcome().result())[2])
+    print(ww, bw, statistics.mean(wtimes), statistics.mean(btimes))
+
+
+#SimulateN(RandomMove,RandomMove, 100)
+
+#print(time.time())
+#print(time.process_time())
+#print(time.process_time())
+
+print(Sack(AntiBoard("7k/8/8/8/8/8/1R6/KQ6 w - - 0 1"), True))
