@@ -162,6 +162,7 @@ board = AntiBoard()
 #print(EvalBoardattack(board))
 
 def Sack(board, colour):
+    print(board)
     dic = {'p' : [], 'n' : [], 'b' : [], 'r' : [], 'q' : [], 'k' : [],
     'P' : [], 'N' : [], 'B' : [], 'R' : [], 'Q' : [], 'K' : []}
     piece = 0
@@ -175,31 +176,64 @@ def Sack(board, colour):
                 move = SackPiece(board, dic['R'][0], dic['k'][0])
                 return Convert(move[0]) + Convert(move[1])
             elif (dic['B'] != []):
-                move = SackPiece(board, dic['R'][0], dic['k'][0])
+                move = SackPiece(board, dic['B'][0], dic['k'][0])
                 return Convert(move[0]) + Convert(move[1])
             elif (dic['N'] != []):
-                move = SackPiece(board, dic['R'][0], dic['k'][0])
+                move = SackPiece(board, dic['N'][0], dic['k'][0])
                 return Convert(move[0]) + Convert(move[1])
         elif (dic['R'] != []):
             if (dic['B'] != []):
-                move = SackPiece(board, dic['R'][0], dic['k'][0])
+                move = SackPiece(board, dic['B'][0], dic['k'][0])
                 return Convert(move[0]) + Convert(move[1])
             elif (dic['N'] != []):
-                move = SackPiece(board, dic['R'][0], dic['k'][0])
+                move = SackPiece(board, dic['N'][0], dic['k'][0])
                 return Convert(move[0]) + Convert(move[1])
         elif (len(dic['B']) >= 2):
-            if (dic['B'] != []):
-                move = SackPiece(board, dic['R'][0], dic['k'][0])
+            if (dic['N'] != []):
+                move = SackPiece(board, dic['N'][0], dic['k'][0])
                 return Convert(move[0]) + Convert(move[1])
         elif (len(dic['N']) >= 2):
-            print(1)
+            if (dic['B'] != []):
+                move = SackPiece(board, dic['B'][0], dic['k'][0])
+                return Convert(move[0]) + Convert(move[1])
         elif (len(dic['N'] + len(dic['B'])) >= 2):
             print(1)
-            #sack everything else
+            #You have a Bishop knight endgame with pawns?
         else:
+            #Endgame with pawns and maybe something else or draw
             print(5)
-
-    return "A"
+    else:
+        if (dic['q'] != []):
+            if (dic['r'] != []):
+                move = SackPiece(board, dic['r'][0], dic['K'][0])
+                return Convert(move[0]) + Convert(move[1])
+            elif (dic['b'] != []):
+                move = SackPiece(board, dic['b'][0], dic['K'][0])
+                return Convert(move[0]) + Convert(move[1])
+            elif (dic['n'] != []):
+                move = SackPiece(board, dic['n'][0], dic['K'][0])
+                return Convert(move[0]) + Convert(move[1])
+        elif (dic['r'] != []):
+            if (dic['b'] != []):
+                move = SackPiece(board, dic['b'][0], dic['K'][0])
+                return Convert(move[0]) + Convert(move[1])
+            elif (dic['n'] != []):
+                move = SackPiece(board, dic['n'][0], dic['K'][0])
+                return Convert(move[0]) + Convert(move[1])
+        elif (len(dic['b']) >= 2):
+            if (dic['n'] != []):
+                move = SackPiece(board, dic['n'][0], dic['K'][0])
+                return Convert(move[0]) + Convert(move[1])
+        elif (len(dic['n']) >= 2):
+            if (dic['b'] != []):
+                move = SackPiece(board, dic['b'][0], dic['K'][0])
+                return Convert(move[0]) + Convert(move[1])
+        elif (len(dic['n'] + len(dic['b'])) >= 2):
+            print(1)
+            #You have a Bishop knight endgame with pawns?
+        else:
+            #Endgame with pawns and maybe something else or draw
+            print(5)
 
 def Distance(s1 , s2):
     dist = abs(s1-s2)
@@ -266,4 +300,4 @@ def SimulateN(f1, f2, n):
 #print(time.process_time())
 #print(time.process_time())
 
-print(Sack(AntiBoard("7k/8/8/8/8/8/1R6/KQ6 w - - 0 1"), True))
+print(Sack(AntiBoard("7k/8/8/8/8/8/NN6/KQ6 w - - 0 1"), True))
