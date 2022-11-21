@@ -20,7 +20,15 @@ class MyLegalMoveGenerator(chess.LegalMoveGenerator):
         return self.board.generate_legal_captures() if any(self.board.generate_legal_captures()) \
             else self.board.generate_legal_moves()
 
-board = AntiBoard("r1bqkb1r/1p1ppppp/2n2n2/p1p5/P1P5/3P4/1PQ1PPPP/RNB1KBNR w KQkq - 3 5")
+board = AntiBoard()
+
+def IsTablebase(board):
+    whitepieces, blackpieces = 0, 0
+    for i in range(64):
+        piece = str(board.piece_at(i))
+        whitepieces += piece.isupper()
+        blackpieces += piece.islower()
+    return (whitepieces == 1 and blackpieces <= 3) or (whitepieces <= 3 and blackpieces == 1)
 
 def RandomMove(board):
     if IsTablebase(board):
@@ -32,17 +40,20 @@ def RandomMove(board):
 
 tablebase = chess.gaviota.open_tablebase("tablebase")
 
-def IsTablebase(board):
-    whitepieces, blackpieces = 0, 0
+def Eval(board, pawn, knight, bishop, rook, queen):
+    wpieces, bpieces, value, attacks = 0, 0, 0, 0
+    values = {'P' : pawn, 'N' : knight, 'B' : bishop, 'R' : rook, 'Q' : queen, 'K' : 0, 'NONE': 0}
     for i in range(64):
         piece = str(board.piece_at(i))
-        whitepieces += piece.isupper()
-        blackpieces += piece.islower()
-    return (whitepieces == 1 and blackpieces <= 3) or (whitepieces <= 3 and blackpieces == 1)
+        wpieces += piece.isupper()
+        bpieces += piece.islower()
+        value += values[piece.upper()] * (1 if piece.isupper() else -1)
+        attacks += len(board.attacks(i)) * (-1 if board.color_at(i) else 1)
+    return ((wpieces == 1 and bpieces <= 3) or (wpieces <= 3 and bpieces == 1), value, attacks)
 
 def Endgame(board):
     copyboard = board.copy()
-    while not copyboard.outcome():
+    while not copyboard.is_game_over():
         moves = list(copyboard.legal_moves)
         n = abs(tablebase.probe_dtm(copyboard))
         for move in moves:
@@ -55,107 +66,110 @@ def Endgame(board):
                 return str(move)
             copyboard.pop()
 
-def EvalBoard(board, pawn, knight, bishop, rook, queen):
-    dic = {'p' : (-1 * pawn), 'n' : (-1 * knight), 'b' : (-1 * bishop), 'r' : (-1 * rook), 'q' : (-1 * queen), 'k' : 0,
-    'P' : pawn, 'N' : knight, 'B' : bishop, 'R' : rook, 'Q' : queen, 'K' : 0, 'None': 0}
-    value = 0
-    for i in range(64):
-        piece = str(board.piece_at(i))
-        value += dic[piece]
-    return value
+tablesize = 2**16
+transtable = {} # index: [hash, depth, value, flag, move]
 
-def EvalBoardAttack(board):
-    white = 0
-    black = 0
-    for i in range(64):
-        if (board.color_at(i) == True):
-            white += len(board.attacks(i))
-        elif(board.color_at(i) == False):
-            black += len(board.attacks(i))
-    return [white, black]
+def God(board):
+    if len(list(board.legal_moves)) == 1:
+        return str(list(board.legal_moves)[0])
 
-tablesize = 2**12
-transtable = {} # index: [hash, depth, value, flag] 2x
-
-def God(board, depth): # Implements Alpha-Beta pruning, Iterative deepening, Transposition tables, Killer heuristic, and Tablebases
-
+    nodes = [0]
     def alphabeta(node, depth, alpha, beta, maximizingPlayer, first):
-        if IsTablebase(node):
+        nodes[0] += 1
+        capture = any(node.generate_legal_captures())
+        istablebase, eval1, eval2 = Eval(node, 1, 2, 2, 3, 4)
+        if node.is_game_over():
+            outcome = node.outcome().result()
+            return -1 if "/" in outcome else (200 if outcome[0] == "1" else -200) * (1 if color else -1)
+        if node.is_repetition():
+            return -1
+        if istablebase:
             dtm = tablebase.probe_dtm(node)
-            return 0 if dtm == 0 else dtm/abs(dtm)*200
+            return -1 if dtm == 0 else dtm/abs(dtm)*200 * (1 if maximizingPlayer else -1)
+        current = (eval1 + eval2 * (abs(eval1) < 5) * 0.05) * (1 if color else -1)
         if depth == 0:
-            e1 = EvalBoard(node, 1, 3, 3, 5, 9)
-            e2 = EvalBoardAttack(node)
-            return (e1 + (e2[1] - e2[0]) * (abs(e1) < 8) * 0.05 + random.uniform(0,0.01)) * (1 if color else -1)
-        children = []
-        for move in list(node.legal_moves):
-            child = node.copy()
-            child.push(move)
-            children.append(child)
-        def priority(child):
-            hash = chess.polyglot.zobrist_hash(child)
-            if hash % tablesize in transtable:
-                entry = transtable[hash % tablesize]
-                if entry[0] == hash:
-                    return (entry[3], entry[2])
-            return (0, 0)
-        children.sort(key = priority, reverse = maximizingPlayer)
+            return current
+        hash = chess.polyglot.zobrist_hash(node)
+        moves = list(node.legal_moves)
+        if hash % tablesize in transtable:
+            entry = transtable[hash % tablesize]
+            if entry[0] == hash:
+                moves = [chess.Move.from_uci(entry[4])] + moves
+            if entry[0] == hash and entry[1] >= depth:
+                if entry[3] == 0:
+                    return entry[4] if first else entry[2]
+                if entry[3] == 1 and entry[2] >= beta:
+                    return entry[4] if first else entry[2]
+                if entry[3] == -1 and entry[2] <= alpha:
+                    return entry[4] if first else entry[2]
+
         if maximizingPlayer:
-            value = -200
-            for child in children:
-                hash = chess.polyglot.zobrist_hash(child)
-                if hash % tablesize in transtable:
-                    entry = transtable[hash % tablesize]
-                    if entry[0] == hash and entry[1] >= depth:
-                        v = entry[2]
-                    else:
-                        v = alphabeta(child, depth - 1 + node.is_capture(move), alpha, beta, False, False)
-                else:
-                    v = alphabeta(child, depth - 1 + node.is_capture(move), alpha, beta, False, False)
-                transtable[hash % tablesize] = [hash, depth, v, 0]
+            if depth == 1 and current + 0.3 < alpha and (not capture):
+                return current
+            value = -300
+            flag = -1
+            for move in moves:
+                child = node.copy()
+                child.push(move)
+                capturenext = any(child.generate_legal_captures())
+                v = alphabeta(child, depth - 1 + capturenext, alpha, beta, False, False)
                 if v > value:
                     value = v
-                    best = child
+                    best = move
                 if value >= beta:
-                    transtable[hash % tablesize][3] = 1
+                    flag = 1
                     break
-                alpha = max(alpha, value)
-            return best if first else value
+                if value >= alpha:
+                    flag = 0
+                    alpha = value
+            transtable[hash % tablesize] = [hash, depth, value, flag, str(best)]
+            return str(best) if first else value
         else:
-            value = 200
-            for child in children:
-                hash = chess.polyglot.zobrist_hash(child)
-                if hash % tablesize in transtable:
-                    entry = transtable[hash % tablesize]
-                    if entry[0] == hash and entry[1] >= depth:
-                        v = entry[2]
-                    else:
-                        v = alphabeta(child, depth - 1 + node.is_capture(move), alpha, beta, True, False)
-                else:
-                    v = alphabeta(child, depth - 1 + node.is_capture(move), alpha, beta, True, False)
-                transtable[hash % tablesize] = [hash, depth, v, 0]
+            if depth == 1 and current - 0.3 > beta and (not capture):
+                return current
+            value = 300
+            flag = 1
+            for move in moves:
+                child = node.copy()
+                child.push(move)
+                v = alphabeta(child, depth - 1 + capturenext, alpha, beta, True, False)
                 if v < value:
                     value = v
-                    best = child
-                value = min(value, v)
+                    best = move
                 if value <= alpha:
-                    transtable[hash % tablesize][3] = -1
+                    flag = -1
                     break
-                beta == min(beta, value)
-            return best if first else value
+                if value <= beta:
+                    flag = 0
+                    beta = value
+            transtable[hash % tablesize] = [hash, depth, value, flag, str(best)]
+            return str(best) if first else value
     
-    alphabeta(board, 1, -200, 200, True, True)
-    return str(alphabeta(board, depth, -200, 200, True, True).pop())
+    if IsTablebase(board):
+        return Endgame(board)
+
+    for i in range(1,5):
+        start = time.time()
+        move = alphabeta(board, i, -500, 500, True, True)
+        print("Depth %s: %s with %s nodes searched." % (i, move, nodes[0]))
+        end = time.time()
+        if end - start > 0.5:
+            return move
+    return move
 
 def Convert(n):
     alpha = ["a","b","c","d","e","f","g","h"]
     return alpha[n % 8]+ str(n // 8 + 1)
 
+def Deconvert(s):
+    dic = {"a":0,"b":1,"c":2,"d":3,"e":4,"f":5,"g":6,"h":7}
+    return (int(s[1]) - 1) * 8 + dic[s[0]]
+
 def Simulate(f1, f2):
     board = AntiBoard("8/8/4k3/8/8/3BBK2/8/8 w - - 0 1")
     turn = 0
     players = (f1,f2)
-    while not board.outcome():
+    while not board.is_game_over():
         print(board)
         print()
         move = players[turn](board)
@@ -174,6 +188,16 @@ def Human(board):
         move = input()
     return move
 
-
-
-Simulate(Human,RandomMove)
+board = AntiBoard()
+tablesize = 2**16
+transtable = {}
+color = 0
+board.push_san(input())
+while not board.is_game_over():
+    move = God(board)
+    board.push_san(move)
+    print(move)
+    board.push_san(input("Enter a move: "))
+    print(board)
+startingboard = AntiBoard()
+print(startingboard.variation_san(board.move_stack))

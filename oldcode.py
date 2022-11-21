@@ -97,3 +97,106 @@ def alphabeta(node, depth, alpha, beta, maximizingPlayer, first):
                 break
             beta == min(beta, value)
         return best if first else value
+
+def IsTablebase(board):
+    whitepieces, blackpieces = 0, 0
+    for i in range(64):
+        piece = str(board.piece_at(i))
+        whitepieces += piece.isupper()
+        blackpieces += piece.islower()
+    return (whitepieces == 1 and blackpieces <= 3) or (whitepieces <= 3 and blackpieces == 1)
+
+def EvalBoard(board, pawn, knight, bishop, rook, queen):
+    dic = {'p' : (-1 * pawn), 'n' : (-1 * knight), 'b' : (-1 * bishop), 'r' : (-1 * rook), 'q' : (-1 * queen), 'k' : 0,
+    'P' : pawn, 'N' : knight, 'B' : bishop, 'R' : rook, 'Q' : queen, 'K' : 0, 'None': 0}
+    value = 0
+    for i in range(64):
+        piece = str(board.piece_at(i))
+        value += dic[piece]
+    return value
+
+def EvalBoardAttack(board):
+    white = 0
+    black = 0
+    for i in range(64):
+        if (board.color_at(i) == True):
+            white += len(board.attacks(i))
+        elif(board.color_at(i) == False):
+            black += len(board.attacks(i))
+    return [white, black]
+
+def God(board, depth):
+    nodes = [0]
+    #vals = {"P":1,"N":3,"B":3,"R":5,"Q":9,"K":0}
+    def alphabeta(node, depth, alpha, beta, maximizingPlayer, first):
+        nodes[0] += 1
+        capture = any(node.generate_legal_captures())
+        istablebase, eval1, eval2 = Eval(node, 1, 3, 3, 5, 9)
+        if istablebase:
+            dtm = tablebase.probe_dtm(node)
+            return 0 if dtm == 0 else dtm/abs(dtm)*200
+        if depth == 0:
+            return (eval1 + eval2 * (abs(eval1) < 5) * 0.05) * (1 if color else -1)
+        #if any(node.generate_legal_captures()):
+        #    return str(min(list(node.legal_moves), key = lambda m: vals[str(node.piece_at(Deconvert(str(m)[:2]))).upper()]))
+        children = []
+        for move in list(node.legal_moves):
+            child = node.copy()
+            child.push(move)
+            children.append(child)
+        def priority(child):
+            hash = chess.polyglot.zobrist_hash(child)
+            if hash % tablesize in transtable:
+                entry = transtable[hash % tablesize]
+                if entry[0] == hash:
+                    return (entry[3], entry[2])
+            return (0, 0)
+        children.sort(key = priority, reverse = maximizingPlayer)
+        if maximizingPlayer:
+            value = -200
+            for child in children:
+                hash = chess.polyglot.zobrist_hash(child)
+                if hash % tablesize in transtable:
+                    entry = transtable[hash % tablesize]
+                    if entry[0] == hash and (entry[1] >= depth or capture):
+                        v = entry[2]
+                    else:
+                        v = alphabeta(child, depth - 1 + capture, alpha, beta, False, False)
+                else:
+                    v = alphabeta(child, depth - 1 + capture, alpha, beta, False, False)
+                transtable[hash % tablesize] = [hash, depth - 1, v, 0]
+                if v > value:
+                    value = v
+                    best = child
+                if value >= beta:
+                    transtable[hash % tablesize][3] = 1
+                    break
+                alpha = max(alpha, value)
+            return best if first else value
+        else:
+            value = 200
+            for child in children:
+                hash = chess.polyglot.zobrist_hash(child)
+                if hash % tablesize in transtable:
+                    entry = transtable[hash % tablesize]
+                    if entry[0] == hash and (entry[1] >= depth or capture):
+                        v = entry[2]
+                    else:
+                        v = alphabeta(child, depth - 1 + capture, alpha, beta, True, False)
+                else:
+                    v = alphabeta(child, depth - 1 + capture, alpha, beta, True, False)
+                transtable[hash % tablesize] = [hash, depth - 1, v, 0]
+                if v < value:
+                    value = v
+                    best = child
+                value = min(value, v)
+                if value <= alpha:
+                    transtable[hash % tablesize][3] = -1
+                    break
+                beta == min(beta, value)
+            return best if first else value
+    
+    #for i in range(1,depth-1):
+    #    alphabeta(board, i, -200, 200, True, True)
+    alphabeta(board, 1, -200, 200, True, True)
+    return str(alphabeta(board, depth, -200, 200, True, True).pop()), nodes[0]
