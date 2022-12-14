@@ -8,7 +8,7 @@ import math
 import time
 import statistics
 
-#color = 1 if sys.argv[1] == "white" else 0
+color = 1 if sys.argv[1] == "white" else 0
 
 class AntiBoard(chess.Board): 
     @property
@@ -49,10 +49,11 @@ def Eval(board, color, isendgame, pawn, knight, bishop, rook, queen):
         attacks += len(board.attacks(i)) * (-1 if board.color_at(i) else 1)
         if piece.upper() == 'P':
             pawns += i // 8 + 1 + (0 if piece.isupper() else -9)
+    print(pawns)
     istablebase = (wpieces == 1 and bpieces <= 3) or (wpieces <= 3 and bpieces == 1)
     if isendgame:
-        return (istablebase, ((12 - wpieces - bpieces) * (value >= 2) * \
-            (1 if value > 0 else -1) + 0.1 * value + 0.001 * pawns) * (1 if color else -1))
+        return (istablebase, ((((12 - wpieces - bpieces) * (abs(value) >= 2) + \
+            0.1 * abs(value))) * (1 if value >= 0 else -1) + 0.001 * pawns) * (1 if color else -1))
     return (istablebase, value * (1 if color else -1))
 
 def Endgame(board):
@@ -85,7 +86,7 @@ def God(board, color, transtable, drawval):
         if node.is_game_over():
             outcome = node.outcome().result()
             return drawval if "/" in outcome else (200 if outcome[0] == "1" else -200) * (1 if color else -1)
-        if hash in game and game[hash] >= 1 + first:
+        if hash in game and game[hash] >= 1 and not first:
             return drawval
         if istablebase:
             dtm = tablebase.probe_dtm(node)
@@ -177,45 +178,29 @@ def God(board, color, transtable, drawval):
             bestmove = move
             bestval = val
         end = time.time()
-        print("Depth %s: %s, value %s, %s nodes searched, %s seconds." % (i, bestmove, bestval, nodes[0], round(end-start,2)))
+        #print("Depth %s: %s, value %s, %s nodes searched, %s seconds." % (i, bestmove, bestval, nodes[0], round(end-start,2)))
         if end - start > 1:
             return bestmove
     return bestmove
 
-def Convert(n):
-    alpha = ["a","b","c","d","e","f","g","h"]
-    return alpha[n % 8]+ str(n // 8 + 1)
+board = AntiBoard()
+if color:
+    move = God(board, color, transtable, -1.5)
+    board.push_san(move)
+    print(str(move))
+while not board.is_game_over():
+    s = input()
+    board.push_san(s)
 
-def Deconvert(s):
-    dic = {"a":0,"b":1,"c":2,"d":3,"e":4,"f":5,"g":6,"h":7}
-    return (int(s[1]) - 1) * 8 + dic[s[0]]
+    move = God(board, color, transtable, -1.5)
+    board.push_san(move)
+    print(str(move))
 
-def Simulate(f1, f2):
-    board = AntiBoard("8/8/4k3/8/8/3BBK2/8/8 w - - 0 1")
-    turn = 0
-    players = (f1,f2)
-    while not board.is_game_over():
-        print(board)
-        print()
-        move = players[turn](board)
-        board.push_san(move)
-        print("%s plays %s" % (["White","Black"][turn], move))
-        turn = 1 - turn
-    print("Outcome: " + str(board.outcome().result()))
-
-def Human(board):
-    print("Enter a move: ")
-    print([str(m) for m in list(board.legal_moves)])
-    move = input()
-    while (move not in [str(m) for m in list(board.legal_moves)]):
-        print("This is not a legal move, please enter one of the following legal moves: ")
-        print([str(m) for m in list(board.legal_moves)])
-        move = input()
-    return move
+quit()
 
 whitetable = {}
 blacktable = {}
-board = AntiBoard("rr4n1/5pk1/6p1/6P1/6K1/8/5P2/5BQ1 w - - 0 1")
+board = AntiBoard()
 game = {}
 #board.push_san(RandomMove(board))
 #board.push_san(RandomMove(board))

@@ -200,3 +200,34 @@ def God(board, depth):
     #    alphabeta(board, i, -200, 200, True, True)
     alphabeta(board, 1, -200, 200, True, True)
     return str(alphabeta(board, depth, -200, 200, True, True).pop()), nodes[0]
+
+def Convert(n):
+    alpha = ["a","b","c","d","e","f","g","h"]
+    return alpha[n % 8]+ str(n // 8 + 1)
+
+def Deconvert(s):
+    dic = {"a":0,"b":1,"c":2,"d":3,"e":4,"f":5,"g":6,"h":7}
+    return (int(s[1]) - 1) * 8 + dic[s[0]]
+
+def Simulate(f1, f2):
+    board = AntiBoard("8/8/4k3/8/8/3BBK2/8/8 w - - 0 1")
+    turn = 0
+    players = (f1,f2)
+    while not board.is_game_over():
+        print(board)
+        print()
+        move = players[turn](board)
+        board.push_san(move)
+        print("%s plays %s" % (["White","Black"][turn], move))
+        turn = 1 - turn
+    print("Outcome: " + str(board.outcome().result()))
+
+def Human(board):
+    print("Enter a move: ")
+    print([str(m) for m in list(board.legal_moves)])
+    move = input()
+    while (move not in [str(m) for m in list(board.legal_moves)]):
+        print("This is not a legal move, please enter one of the following legal moves: ")
+        print([str(m) for m in list(board.legal_moves)])
+        move = input()
+    return move
