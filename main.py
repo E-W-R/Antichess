@@ -13,6 +13,8 @@ knight = 2.5
 bishop = 2.5
 rook = 4
 queen = 6
+cutoff = 0.7
+maxtime = 6
 
 color = 1 if sys.argv[1] == "white" else 0
 
@@ -103,7 +105,7 @@ def God(board, color, transtable, drawval):
         current = eval
         if depth == 0 or count >= 14:
             return current
-        if not first and time.time() - start > 6:
+        if not first and time.time() - start > maxtime:
             return None
         moves = list(node.legal_moves)
         if hash % tablesize in transtable:
@@ -188,7 +190,7 @@ def God(board, color, transtable, drawval):
             bestval = val
         end = time.time()
         #print("Depth %s: %s, value %s, %s nodes searched, %s seconds." % (i, bestmove, bestval, nodes[0], round(end-start,2)))
-        if end - start > 0.6:
+        if end - start > cutoff:
             return bestmove
     return bestmove
 

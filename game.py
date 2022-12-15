@@ -55,13 +55,18 @@ def sim(n):
         if not board.is_game_over():
             pws[p1] += t1 > 0
             pws[p2] += t2 > 0
-        if (str(board.outcome().result()) == "1/2-1/2"):
-            pws[p1] += 0.5
-            pws[p2] += 0.5
-        else: 
-            pws[p1] += int(str(board.outcome().result())[0])
-            pws[p2] += int(str(board.outcome().result())[2])
-        print(t1, t2, str(board.outcome().result()))
+        t1, t2 = 180 - t1, 180 - t2
+        p1t, p2t = (t1, t2) if p1 == 0 else (t2, t1)
+        if board.is_game_over():
+            if (str(board.outcome().result()) == "1/2-1/2"):
+                pws[p1] += 0.5
+                pws[p2] += 0.5
+                print("Draw, P1: %s:%s, P2: %s:%s" % (int(p1t//60),round(p1t%60),int(p2t//60),round(p2t%60)))
+            else: 
+                pws[p1] += int(str(board.outcome().result())[0])
+                pws[p2] += int(str(board.outcome().result())[2])
+                winner = [p2,p1][int(str(board.outcome().result())[0])]
+                print("Player %s wins, P1: %s:%s, P2: %s:%s" % (winner+1,int(p1t//60),round(p1t%60),int(p2t//60),round(p2t%60)))
         g = chess.pgn.Game()
         PGNs.append(str(g.from_board(board)).split('\n')[-1])
     
