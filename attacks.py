@@ -18,6 +18,7 @@ maxtime = 6
 maxdepth = 14
 
 color = 1 if sys.argv[1] == "white" else 0
+turn = 1
 
 class AntiBoard(chess.Board): 
     @property
@@ -63,7 +64,7 @@ def Eval(board, color, isendgame, opponents, pawn, knight, bishop, rook, queen):
         return (istablebase, ((((12 - wpieces - bpieces) * (abs(value) >= 2) * 10 * \
             (opponents < [wpieces, bpieces][color] or [wpieces, bpieces][color] == 1) + \
             abs(value))) * (1 if value >= 0 else -1) + 0.01 * pawns) * (1 if color else -1))
-    return (istablebase, value * (1 if color else -1))
+    return (istablebase, (value + attacks * 0.01 * turn > 20) * (1 if color else -1))
 
 def Endgame(board):
     copyboard = board.copy()
@@ -98,7 +99,7 @@ def God(board, color, transtable, drawval):
         if node.is_game_over():
             outcome = node.outcome().result()
             return drawval if "/" in outcome else (200 if outcome[0] == "1" else -200) * (1 if color else -1)
-        if hash in game and not first:
+        if hash in game and game[hash] >= 1 and not first:
             return drawval
         if istablebase:
             dtm = tablebase.probe_dtm(node)
@@ -118,12 +119,12 @@ def God(board, color, transtable, drawval):
                 if first:
                     fake = node.copy()
                     fake.push_san(entry[4])
-                    drawcheck = hash in game
+                    drawcheck = hash in game and game[hash] >= 1
                     for move in list(fake.legal_moves):
                         child = fake.copy()
                         child.push(move)
                         childhash = chess.polyglot.zobrist_hash(child)
-                        drawcheck = drawcheck or childhash in game
+                        drawcheck = drawcheck or (childhash in game and game[childhash] >= 1)
                 if not drawcheck:
                     if entry[3] == 0:
                         return (entry[4], entry[2]) if first else entry[2]
@@ -183,7 +184,7 @@ def God(board, color, transtable, drawval):
     if IsTablebase(board):
         return Endgame(board)
 
-    for i in range(1, 20):
+    for i in range(1,10):
         start = time.time()
         move, val = alphabeta(board, i, -250, 250, True, True, 0)
         if move != None:
@@ -214,6 +215,8 @@ while not board.is_game_over():
     print(str(move))
     hash = chess.polyglot.zobrist_hash(board)
     game[hash] = 1
+
+    turn += 1
 
 print('End')
 

@@ -5,33 +5,30 @@ import time
 import sys
 
 f1, f2 =  sys.argv[1], sys.argv[2]
-fs = [f1, f2]
-p1times, p2times = [], []
-times = [p1times, p2times]
-p1w, p2w = 0, 0
-pws = [p1w, p2w]
-PGNs = []
+f = open('%s v %s.txt' % (f1, f2), 'w')
+print()
 
 def sim(n):
     for i in range(n):
-        p1, p2 = i%2, (i+1)%2
+        s = "Game %s, %s v %s:" % (i + 1, [f1,f2][i%2], [f1,f2][(i+1)%2])
+        print(s)
+        f.write(s + '\n')
 
         board = chess.Board()
-        script1 = Popen(["pypy3", fs[p1], "white"], stdin=PIPE, stdout=PIPE)
-        script2 = Popen(["pypy3", fs[p2], "black"], stdin=PIPE, stdout=PIPE)
-        print()
+        script1 = Popen(["pypy3", [f1,f2][i%2], "white"], stdin=PIPE, stdout=PIPE)
+        script2 = Popen(["pypy3", [f1,f2][(i+1)%2], "black"], stdin=PIPE, stdout=PIPE)
 
-        t1, t2 = 180, 180
+        t1, t2 = 0, 0
         start = time.time()
-        while not board.is_game_over() and t1 > 0 and t2 > 0:
+        while not board.is_game_over() and t1 < 180 and t2 < 180:
             output1 = script1.stdout.readline()
             if output1.decode('ascii') in ['', 'End']:   break
             board.push_san(output1.decode('ascii')[:-1])
-            print(output1.decode('ascii'))
+            #print(output1.decode('ascii'))
             script2.stdin.write(output1)
             script2.stdin.flush()
             end = time.time()
-            t1 -= end - start
+            t1 += end - start
             start = end
 
             if board.is_game_over():
@@ -40,36 +37,30 @@ def sim(n):
             output2 = script2.stdout.readline()
             if output2.decode('ascii') in ['', 'End']:   break
             board.push_san(output2.decode('ascii')[:-1])
-            print(output2.decode('ascii'))
+            #print(output2.decode('ascii'))
             script1.stdin.write(output2)
             script1.stdin.flush()
             end = time.time()
-            t2 -= end - start
+            t2 += end - start
             start = end
 
         script1.terminate()
         script2.terminate()
 
-        times[p1].append(t1)
-        times[p2].append(t2)
-        if not board.is_game_over():
-            pws[p1] += t1 > 0
-            pws[p2] += t2 > 0
-        t1, t2 = 180 - t1, 180 - t2
-        p1t, p2t = (t1, t2) if p1 == 0 else (t2, t1)
         if board.is_game_over():
             if (str(board.outcome().result()) == "1/2-1/2"):
-                pws[p1] += 0.5
-                pws[p2] += 0.5
-                print("Draw, P1: %s:%s, P2: %s:%s" % (int(p1t//60),round(p1t%60),int(p2t//60),round(p2t%60)))
-            else: 
-                pws[p1] += int(str(board.outcome().result())[0])
-                pws[p2] += int(str(board.outcome().result())[2])
-                winner = [p2,p1][int(str(board.outcome().result())[0])]
-                print("Player %s wins, P1: %s:%s, P2: %s:%s" % (winner+1,int(p1t//60),round(p1t%60),int(p2t//60),round(p2t%60)))
-        g = chess.pgn.Game()
-        PGNs.append(str(g.from_board(board)).split('\n')[-1])
-    
-    print(pws, times, PGNs)
+                s = "Draw, P1: %s:%s, P2: %s:%s" % (int(t1//60),round(t1%60),int(t1//60),round(t1%60))
+            else:
+                winner = 2 - int(str(board.outcome().result())[0])
+                s = "Player %s wins, P1: %s:%s, P2: %s:%s" % (winner,int(t1//60),round(t1%60),int(t2//60),round(t2%60))
+        else:
+            s = "Player %s wins, P1: %s:%s, P2: %s:%s" % (1 + (t2 > 0),int(t1//60),round(t1%60),int(t2//60),round(t2%60))
+        print(s)
+        f.write(s + '\n')
+        pgn = str(chess.pgn.Game().from_board(board)).split('\n')[-1] + '\n'
+        print(pgn)
+        f.write(pgn + '\n')
+
+    f.close()
 
 sim(2)
