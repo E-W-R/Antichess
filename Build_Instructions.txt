@@ -1,0 +1,37 @@
+# These are the build instructions for what you need to install to run the program, based on a Virtual Machine we used. The Virtual Machine had no prior packages
+# installed so you will not necessarily need all these libraries etc so only take what you need.
+
+# You will not need the following command if you recetly updated your packages and dependencies
+
+sudo apt-get update
+
+# to install git to clone the repository in the future
+
+sudo apt-get install git
+
+# if you need the latest version of python3
+
+sudo apt install python3-pip
+
+# to install homebrew as we need to install pypy3 in the future
+
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# commands to set up Homebrew correctly in PATH. change aaryamanbhageria bit as required, my user was called aaryamanbhageria.
+
+echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/aaryamanbhageria/.bashrc
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+# installing the metapackage
+
+sudo apt-get install build-essential
+
+# installing pypy3 
+
+brew install pypy3
+
+# installing the python-chess library
+
+pypy3 -m pip install python-chess
+
+# once you have run all of these, you can clone the repository and run the main.py function giving input as defined by the project specifications.
