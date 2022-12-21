@@ -54,7 +54,7 @@ def sim(n):
                 winner = 2 - int(str(board.outcome().result())[0])
                 s = "Player %s wins, P1: %s:%s, P2: %s:%s" % (winner,int(t1//60),round(t1%60),int(t2//60),round(t2%60))
         else:
-            s = "Player %s wins, P1: %s:%s, P2: %s:%s" % (1 + (t2 > 0),int(t1//60),round(t1%60),int(t2//60),round(t2%60))
+            s = "Player %s wins, P1: %s:%s, P2: %s:%s" % (1 + (t2 < 180),int(t1//60),round(t1%60),int(t2//60),round(t2%60))
         print(s)
         f.write(s + '\n')
         pgn = str(chess.pgn.Game().from_board(board)).split('\n')[-1] + '\n'
