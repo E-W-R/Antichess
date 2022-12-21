@@ -1,5 +1,6 @@
-# These are the build instructions for what you need to install to run the program, based on a Virtual Machine we used. The Virtual Machine had no prior packages
-# installed so you will not necessarily need all these libraries etc so only take what you need.
+# These are the build instructions for what you need to install to run the program, based on a Virtual Machine we used. The Virtual Machine had no prior 
+# packages installed so you will not necessarily need all these commands. I recommend running all though as that will ensure that the bot works exactly 
+# as desired
 
 # You will not need the following command if you recetly updated your packages and dependencies
 
