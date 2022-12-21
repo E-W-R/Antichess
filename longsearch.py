@@ -13,12 +13,13 @@ knight = 2.5
 bishop = 2.5
 rook = 4
 queen = 6
-cutoff = 0.7
-maxtime = 6
+cutoff = 0.8
+maxtime = 8
 maxdepth = 14
 emergency = False
 
 color = 1 if sys.argv[1] == "white" else 0
+gametime = 0
 
 class AntiBoard(chess.Board): 
     @property
@@ -213,11 +214,19 @@ while not board.is_game_over():
     if board.is_game_over():
         break
 
+    t = time.time()
     move = God(board, color, transtable, -1.2)
+    gametime += time.time() - t
     board.push_san(move)
     print(str(move))
     hash = chess.polyglot.zobrist_hash(board)
     game[hash] = 1
+
+    if gametime > 150:
+        cutoff = 0.2
+        maxtime = 3
+    if gametime > 170:
+        emergency = True
 
 print('End')
 

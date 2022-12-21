@@ -201,7 +201,7 @@ def God(board, color, transtable, drawval):
 
 board = AntiBoard()
 if color:
-    move = God(board, color, transtable, -1.2)
+    move = "b1c3"
     board.push_san(move)
     print(str(move))
 while not board.is_game_over():

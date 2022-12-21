@@ -13,12 +13,14 @@ knight = 2.5
 bishop = 2.5
 rook = 4
 queen = 6
-cutoff = 0.7
-maxtime = 6
+cutoff = 0.8
+maxtime = 8
 maxdepth = 14
 emergency = False
 
 color = 1 if sys.argv[1] == "white" else 0
+gametime = 0
+turn = 1
 
 class AntiBoard(chess.Board): 
     @property
@@ -64,7 +66,7 @@ def Eval(board, color, isendgame, opponents, pawn, knight, bishop, rook, queen):
         return (istablebase, ((((12 - wpieces - bpieces) * (abs(value) >= 2) * 10 * \
             (opponents < [wpieces, bpieces][color] or [wpieces, bpieces][color] == 1) + \
             abs(value))) * (1 if value >= 0 else -1) + 0.01 * pawns) * (1 if color else -1))
-    return (istablebase, value * (1 if color else -1))
+    return (istablebase, (value + attacks * 0.01 * (turn < 20)) * (1 if color else -1))
 
 def Endgame(board):
     copyboard = board.copy()
@@ -143,7 +145,12 @@ def God(board, color, transtable, drawval):
                 child = node.copy()
                 child.push(move)
                 capturenext = any(child.generate_legal_captures())
-                v = alphabeta(child, depth - 1 + capturenext, alpha, beta, False, False, count + 1)
+                if i >= 5 and depth > 2:
+                    v = alphabeta(child, 2, alpha, beta, False, False, count + 1)
+                    if v != None and v >= alpha:
+                        v = alphabeta(child, depth - 1 + capturenext, alpha, beta, False, False, count + 1)
+                else:
+                    v = alphabeta(child, depth - 1 + capturenext, alpha, beta, False, False, count + 1)
                 if v == None:
                     return (None, None) if first else None
                 if v > value:
@@ -166,7 +173,12 @@ def God(board, color, transtable, drawval):
                 child = node.copy()
                 child.push(move)
                 capturenext = any(child.generate_legal_captures())
-                v = alphabeta(child, depth - 1 + capturenext, alpha, beta, True, False, count + 1)
+                if i >= 5 and depth > 2:
+                    v = alphabeta(child, 2, alpha, beta, True, False, count + 1)
+                    if v!= None and v <= beta:
+                        v = alphabeta(child, depth - 1 + capturenext, alpha, beta, True, False, count + 1)
+                else:
+                    v = alphabeta(child, depth - 1 + capturenext, alpha, beta, True, False, count + 1)
                 if v == None:
                     return (None, None) if first else None
                 if v < value:
@@ -213,11 +225,20 @@ while not board.is_game_over():
     if board.is_game_over():
         break
 
+    t = time.time()
     move = God(board, color, transtable, -1.2)
+    gametime += time.time() - t
     board.push_san(move)
     print(str(move))
     hash = chess.polyglot.zobrist_hash(board)
     game[hash] = 1
+
+    if gametime > 150:
+        cutoff = 0.2
+        maxtime = 3
+    if gametime > 170:
+        emergency = True
+    turn += 1
 
 print('End')
 

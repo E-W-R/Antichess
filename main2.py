@@ -9,12 +9,12 @@ import time
 import statistics
 
 pawn = 1
-knight = 2.5
-bishop = 2.5
-rook = 4
-queen = 6
-cutoff = 1
-maxtime = 8
+knight = 2
+bishop = 2
+rook = 3
+queen = 4
+cutoff = 0.7
+maxtime = 6
 
 color = 1 if sys.argv[1] == "white" else 0
 
