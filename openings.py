@@ -46,13 +46,13 @@ game = {}
 
 def alphabeta(node, depth, alpha, beta, maximizingPlayer, first, count):
     capture = any(node.generate_legal_captures())
-    istablebase, eval = Eval(node, 0, False, 16, pawn, knight, bishop, rook, queen)
+    istablebase, eval = Eval(node, 1, False, 16, pawn, knight, bishop, rook, queen)
     hash = chess.polyglot.zobrist_hash(node)
     if hash in game and not first:
         return drawval
     if node.is_game_over():
         outcome = node.outcome().result()
-        return drawval if "/" in outcome else (200 if outcome[0] == "1" else -200) * (1 if 0 else -1)
+        return drawval if "/" in outcome else (200 if outcome[0] == "1" else -200)
     if hash in game and not first:
         return drawval
     if istablebase:
@@ -137,7 +137,7 @@ for move1 in list(board.legal_moves):
         board.push(move2)
         for move3 in list(board.legal_moves):
             board.push(move3)
-            s = str(chess.polyglot.zobrist_hash(board)) + ':' + alphabeta(board, 4, -250, 250, True, True, 0)[0]
+            s = str(chess.polyglot.zobrist_hash(board)) + ':' + alphabeta(board, 3, -250, 250, True, True, 0)[0]
             print(s)
             f.write(s + '\n')
             board.pop()
