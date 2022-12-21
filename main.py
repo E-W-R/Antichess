@@ -1,12 +1,13 @@
 import sys
+import random
+import time
+
+# Niklas Fiekas, python-chess, acessed in December 2022
+# https://github.com/niklasf/python-chess
 import chess
 import chess.gaviota
 import chess.polyglot
 import chess.pgn
-import random
-import math
-import time
-import statistics
 
 pawn = 1
 knight = 2
