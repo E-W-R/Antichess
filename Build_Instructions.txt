@@ -35,4 +35,10 @@ brew install pypy3
 
 pypy3 -m pip install python-chess
 
-# once you have run all of these, you can clone the repository and run the main.py function giving input as defined by the project specifications.
+# once you have run all of these, you can clone the repository and run the main.py as follows:
+
+pypy3 main.py white 
+
+OR 
+
+pypy3 main.py black - followed by a move
