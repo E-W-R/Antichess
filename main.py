@@ -73,7 +73,7 @@ def Eval(board, color, isendgame, opponents, pawn, knight, bishop, rook, queen):
         return (istablebase, ((((12 - wpieces - bpieces) * (abs(value) >= 2) * 10 * \
             (opponents < [wpieces, bpieces][color] or [wpieces, bpieces][color] == 1) + \
             abs(value))) * (1 if value >= 0 else -1) + 0.01 * pawns) * (1 if color else -1))
-    return (istablebase, (value + attacks * 0.01 * (turn < 20)) * (1 if color else -1))
+    return (istablebase, value * (1 if color else -1))
 
 def Endgame(board):
     copyboard = board.copy()
