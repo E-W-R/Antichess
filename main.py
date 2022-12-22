@@ -2,7 +2,7 @@ import sys
 import random
 import time
 
-# Niklas Fiekas, python-chess, acessed in December 2022
+# Niklas Fiekas, python-chess, accessed in December 2022
 # https://github.com/niklasf/python-chess
 import chess
 import chess.gaviota
@@ -14,9 +14,9 @@ knight = 2.5
 bishop = 2.5
 rook = 4
 queen = 6
-cutoff = 1.2
-maxtime = 8
-maxdepth = 16
+cutoff = 0.7
+maxtime = 7
+maxdepth = 14
 emergency = False
 
 color = 1 if sys.argv[1] == "white" else 0
