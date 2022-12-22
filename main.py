@@ -14,9 +14,9 @@ knight = 2.5
 bishop = 2.5
 rook = 4
 queen = 6
-cutoff = 1.2
-maxtime = 8
-maxdepth = 16
+cutoff = 0.8
+maxtime = 7
+maxdepth = 14
 emergency = False
 
 color = 1 if sys.argv[1] == "white" else 0
@@ -73,7 +73,7 @@ def Eval(board, color, isendgame, opponents, pawn, knight, bishop, rook, queen):
         return (istablebase, ((((12 - wpieces - bpieces) * (abs(value) >= 2) * 10 * \
             (opponents < [wpieces, bpieces][color] or [wpieces, bpieces][color] == 1) + \
             abs(value))) * (1 if value >= 0 else -1) + 0.01 * pawns) * (1 if color else -1))
-    return (istablebase, (value + attacks * 0.01 * (turn < 20)) * (1 if color else -1))
+    return (istablebase, value * (1 if color else -1))
 
 def Endgame(board):
     copyboard = board.copy()
