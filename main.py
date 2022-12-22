@@ -35,7 +35,7 @@ class MyLegalMoveGenerator(chess.LegalMoveGenerator):
 
 board = AntiBoard()
 if color:
-    move = "f2f3"
+    move = "a2a3"
     board.push_san(move)
     print(str(move))
 
