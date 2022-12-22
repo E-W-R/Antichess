@@ -10,10 +10,10 @@ import chess.polyglot
 import chess.pgn
 
 pawn = 1
-knight = 2
-bishop = 2
-rook = 3
-queen = 3
+knight = 2.5
+bishop = 2.5
+rook = 4
+queen = 5
 cutoff = 1.2
 maxtime = 8
 maxdepth = 16
